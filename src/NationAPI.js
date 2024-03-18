@@ -9,26 +9,48 @@ function NationAPI() {
     setUserInput(e.target.value);
   }, []);
 
-  // fetch nationality data
+  // fetch nationality data from 2 different APIs
   const fetchData = useCallback(async () => {
+    // we are only extracting country ID from this
     let responseID = await fetch(
       "https://api.nationalize.io/?name=" + userInput
     );
     let newDataID = await responseID.json();
 
-    console.log(newDataID);
-    let responseName = await fetch(
-      "https://restcountries.com/v3.1/alpha?codes=" +
-        newDataID.country[0].country_id
+    // allow for 2 possibilities of country
+    let countryID1 = newDataID.country[0].country_id;
+    let countryID2 = newDataID.country[1].country_id;
+
+    // because the API has got a typo where 'SQ' is supposed to be 'SG'
+    if (countryID1 === "SQ") {
+      countryID1 = "SG";
+    }
+    if (countryID2 === "SQ") {
+      countryID2 = "SG";
+    }
+
+    // we are using the country ID extracted to fetch country information from this endpoint, including country name
+    let responseName1 = await fetch(
+      "https://restcountries.com/v3.1/alpha?codes=" + countryID1
     );
-    let newDataName = await responseName.json();
+
+    let responseName2 = await fetch(
+      "https://restcountries.com/v3.1/alpha?codes=" + countryID2
+    );
+
+    let newDataName1 = await responseName1.json();
+    let newDataName2 = await responseName2.json();
 
     try {
-      const countryName = JSON.stringify(newDataName[0].name.common).replaceAll(
-        '"',
-        ""
-      );
-      const textString = `${userInput} is from ${countryName}`;
+      const countryName1 = JSON.stringify(
+        newDataName1[0].name.common
+      ).replaceAll('"', "");
+
+      const countryName2 = JSON.stringify(
+        newDataName2[0].name.common
+      ).replaceAll('"', "");
+
+      const textString = `${userInput} is from ${countryName1}...\nOR maybe ${countryName2}`;
       setData(textString);
     } catch (error) {
       console.error(error);
