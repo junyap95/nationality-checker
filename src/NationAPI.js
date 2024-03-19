@@ -1,8 +1,10 @@
 import { useCallback, useState } from "react";
+import CircularProgress from "@mui/material/CircularProgress";
 
 function NationAPI() {
-  let [data, setData] = useState();
-  let [userInput, setUserInput] = useState();
+  const [data, setData] = useState();
+  const [userInput, setUserInput] = useState();
+  const [isLoading, setIsLoading] = useState(false);
 
   // takes in user input
   const onChangeUserInput = useCallback((e) => {
@@ -10,7 +12,9 @@ function NationAPI() {
   }, []);
 
   // fetch nationality data from 2 different APIs
-  const fetchData = useCallback(async () => {
+  const onClickFetch = useCallback(async () => {
+    setData(undefined);
+    setIsLoading(true);
     // we are only extracting country ID from this
     let responseID = await fetch(
       "https://api.nationalize.io/?name=" + userInput
@@ -24,6 +28,7 @@ function NationAPI() {
     if (newDataID.country.length === 0) {
       textString = `We can't locate ${userInput}...`;
       setData(textString);
+      setIsLoading(false);
     } else {
       let responseName1;
       let responseName2;
@@ -68,9 +73,14 @@ function NationAPI() {
           countryIDs.length > 1
             ? `${userInput} is from ${countryName1}...\nOR maybe ${countryName2}`
             : `${userInput} is from ${countryName1}`;
-        setData(textString);
+
+        setTimeout(() => {
+          setData(textString);
+          setIsLoading(false);
+        }, 500);
       } catch (error) {
         console.error(error);
+        setIsLoading(false);
       }
     }
   }, [userInput]);
@@ -89,11 +99,22 @@ function NationAPI() {
           ></input>
         </div>
         <div>
-          <button className="search-button" type="button" onClick={fetchData}>
+          <button
+            className="search-button"
+            type="button"
+            onClick={onClickFetch}
+          >
             Search For Nationality
           </button>
         </div>
         <div className="result-box">{data}</div>
+        {isLoading && (
+          <CircularProgress
+            sx={{
+              color: "darkslategray",
+            }}
+          />
+        )}
       </div>
     </div>
   );
